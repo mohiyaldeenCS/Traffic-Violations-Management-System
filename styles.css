@@ -1,0 +1,470 @@
+body {
+    background-color: #00659E;
+    direction: rtl;
+    color: white;
+}
+
+.custom-hr {
+    border: none;
+    height: 3px; 
+    background-color: #ffffff; 
+    margin: 20px 0;
+}
+
+.sidebar {
+    background-color: #021A61;
+    height: 120vh;
+    padding: 20px;
+    /* width: 270px; */
+}
+.custom-button {
+    border: none;
+    background-color: transparent; 
+    color: #ffffff; 
+    transition: background-color 0.3s ease; 
+}
+
+.custom-button:hover {
+    background-color: #00659E;
+    color: white;
+    border-radius: 10px; 
+}
+.sidebar a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 30px;
+}
+
+.sidebar a:hover  {
+    background-color: #00659E;
+    border-radius: 30px;
+}
+
+.content {
+    padding: 20px;
+}
+
+.stat-box2{
+    background-color: #021A61;
+    border-radius: 10px;
+    padding: 10px;
+    width: 300px;
+    text-align: center;
+}
+
+.stat-box {
+    background-color: #021A61;
+    border-radius: 10px;
+    text-align: center; 
+    padding: 20px;
+    margin-right: auto;
+}
+.stat-box1{
+    background-color: #021A61;
+    border-radius: 10px;
+    padding: 10px;
+}
+.stat-box h3 {
+    font-size: 20px;
+    color: white; 
+}
+
+.inner-box {
+    background-color: #00659E;
+    padding: 10px;
+    border-radius: 10px;
+    /* display: flex; */
+    /* justify-content: center;  */
+    margin-bottom: 10px;
+}
+
+.icon {
+    font-size: 120px;
+    color: #021A61; 
+}
+
+.number-circle {
+    background-color: transparent; 
+    border: 2px solid white; 
+    border-radius: 50%; 
+    width: 70px; 
+    height: 70px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transform: translateX(-210%);
+}
+
+.number-circle h2 {
+    color: white; /* لون الرقم */
+    margin: 0; /* إزالة الهوامش */
+}
+
+.text-success {
+    font-size: 20px; /* حجم الأسهم */
+    width: 30px;
+    height: 30px;
+}
+
+.text-danger {
+    font-size: 20px;
+    color: red; 
+}
+
+.btn-active {
+    background-color: #0077b6;
+    color: white;
+    border-radius: 20px;
+}
+
+.search-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    width: 300px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.search-box button {
+    background-color: #0077b6;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.search-box button:hover {
+    background-color: #005f91;
+}
+
+.violation-info {
+    background-color: #017BC0;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: right;
+}
+.vid{
+    text-align: center;
+}
+
+.img-fluid {
+    width: 100%; /* عرض الصورة */
+    max-width: 300px; /* الحد الأقصى للعرض */
+    border-radius: 10px; /* زوايا دائرية للصورة */
+}
+.table th, .table td {
+    background-color: #021A61;
+    color: white;
+    text-align: right;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.profile-icon {
+    font-size: 24px;
+    color: white;
+}
+
+.user-card {
+    background-color: #017BC0;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+
+/* نموذج إضافة مستخدم */
+.add-user-form {
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    color: white;
+}
+
+.add-user-form label {
+    display: block;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.add-user-form input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #0077b6;
+}
+
+.add-user-form input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* تنسيق checkbox */
+.custom-checkbox {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid white;
+    border-radius: 5px;
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    background: transparent;
+}
+
+.custom-checkbox:checked {
+    background-color: white;
+}
+
+.custom-checkbox:checked::before {
+    content: "✔";
+    font-size: 14px;
+    font-weight: bold;
+    color: #006080;
+    position: absolute;
+    left: 3px;
+    top: -2px;
+}
+
+
+/* نموذج تعديل المستخدم */
+.edit-user-form {
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    color: white;
+}
+
+.edit-user-form label {
+    display: block;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.edit-user-form input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #0077b6;
+}
+
+.edit-user-form input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.account-type {
+    margin-top: 20px;
+}
+
+.account-type .form-check {
+    display: inline-block;
+    margin-right: 15px;
+}
+
+.form-buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.form-buttons .btn {
+    width: 48%;
+}
+
+/* خلفية صفحة تسجيل الدخول */
+.login-body {
+    background-color: #00659E;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* حاوية تسجيل الدخول */
+.login-container {
+    background-color: #021A61;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 350px;
+}
+
+/* عنوان تسجيل الدخول */
+.login-container h2 {
+    color: white;
+    margin-bottom: 20px;
+}
+
+/* مربعات الإدخال */
+.input-group {
+    position: relative;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.input-group .form-control {
+    padding-right: 40px;
+    border-radius: 5px;
+}
+
+.input-group .input-icon {
+    position: absolute;
+    right: 10px; 
+    top: 50%;
+    transform: translateY(-50%);
+    color: #555;
+    font-size: 1.2rem;
+    pointer-events: none; 
+}
+
+/* تنسيق الأزرار */
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+.form-buttons .btn {
+    width: 48%;
+}
+
+.forgot-password, .register, .back-to-login {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.forgot-password a, .register a, .back-to-login a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.forgot-password a:hover, .register a:hover, .back-to-login a:hover {
+    text-decoration: underline;
+}
+
+.register-container {
+    max-width: 900px;
+    margin: auto;
+    padding: 40px;
+    background-color: #021A61;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 70px;
+    text-align: center;
+}
+
+.register-container h2 {
+    margin-bottom: 20px;
+    color: white;
+}
+
+.input-group-text {
+    background-color: #004d66;
+    color: white;
+    border: none;
+}
+
+.input-group input {
+    text-align: right;
+    width: 400px;
+}
+
+.btn-primary {
+    background-color: green;
+    border: none;
+}
+.btn-secondary{
+    background-color: red;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #017BC0;
+}
+
+.back-to-login {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.back-to-login a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.back-to-login a:hover {
+    text-decoration: underline;
+}
+
+
+/* تصميم كرت البروفايل */
+.profile-card {
+    background: #021A61;
+    color: black;
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    width: 50%;
+    margin: 40px auto;
+}
+
+.profile-header img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+.profile-header h3 {
+    margin: 5px 0;
+    font-size: 20px;
+    color: white;
+}
+
+.profile-header p {
+    color: white;
+    font-size: 16px;
+    margin: 5px 0;
+    padding: 5px;
+}
+.profile-info p {
+    color: white;
+    font-size: 16px;
+    margin: 5px 0;
+    padding: 5px;
+}
+.profile-info i {
+    color: white;
+    margin-right: 5px;
+}
+
+.profile-buttons {
+    margin-top: 15px;
+    
+}
+
+.profile-buttons .btn {
+    padding: 8px 15px;
+    font-size: 14px;
+}
+
