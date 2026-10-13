@@ -1,19 +1,84 @@
-name: CI
-
+name: Platform CI
 on:
   push:
-    branches: [main]
+    branches: [main, 'feat/**']
   pull_request:
-
+permissions:
+  contents: read
 jobs:
-  verify:
+  platform:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: rasd
+          POSTGRES_PASSWORD: ci-disposable-database
+          POSTGRES_DB: rasd
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U rasd -d rasd"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://rasd:ci-disposable-database@127.0.0.1:5432/rasd
+      SIMULATION_MODE: '1'
+      DEMO_PASSWORD: CI-synthetic-account-7392!
+      CSRF_TRUSTED_ORIGINS: http://127.0.0.1:5173
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
-          php-version: "8.2"
-      - name: Check PHP syntax
-        run: find . -name '*.php' -print0 | xargs -0 -n1 php -l
-      - name: Check JavaScript syntax
-        run: node --check script.js
+          python-version: '3.14'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: pip install -r backend/requirements-dev.txt
+      - name: Migrations, PostgreSQL transactions and authorization
+        working-directory: backend
+        run: |
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate
+          python manage.py test --verbosity 2
+          python manage.py spectacular --file /tmp/openapi.yaml --validate --fail-on-warn
+          diff ../docs/openapi.yaml /tmp/openapi.yaml
+      - name: Audit Python dependencies and export SBOM
+        run: pip-audit -r backend/requirements.txt --format cyclonedx-json --output /tmp/backend-sbom.json
+      - name: Frontend quality
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          npm test
+          npm audit --audit-level=high
+          npm sbom --sbom-format cyclonedx > /tmp/frontend-sbom.json
+      - name: Real browser workflow
+        working-directory: backend
+        run: |
+          python manage.py seed_demo
+          python manage.py runserver 127.0.0.1:8017 --noreload > /tmp/rasd-server.log 2>&1 &
+          for attempt in $(seq 1 30); do curl -fsS http://127.0.0.1:8017/health/ && break; sleep 1; done
+          cd ../frontend
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+      - name: Verify audit and restore into an empty database
+        run: |
+          python backend/manage.py verify_audit
+          docker exec ${{ job.services.postgres.id }} pg_dump -U rasd -d rasd --format=custom > /tmp/rasd.dump
+          docker exec ${{ job.services.postgres.id }} createdb -U rasd rasd_restore_ci
+          docker exec -i ${{ job.services.postgres.id }} pg_restore -U rasd -d rasd_restore_ci --no-owner < /tmp/rasd.dump
+          DATABASE_URL=postgresql://rasd:ci-disposable-database@127.0.0.1:5432/rasd_restore_ci python backend/manage.py verify_audit
+      - name: Validate container builds
+        run: |
+          docker build -t rasd-api:ci backend
+          docker build -t rasd-web:ci -f deploy/Dockerfile.web .
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: verification-artifacts
+          path: |
+            /tmp/*-sbom.json
+            /tmp/rasd-server.log
+            frontend/test-results/
+          retention-days: 7
