@@ -329,13 +329,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReasonRequest'
+              $ref: '#/components/schemas/AppealSubmissionRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/ReasonRequest'
+              $ref: '#/components/schemas/AppealSubmissionRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/ReasonRequest'
+              $ref: '#/components/schemas/AppealSubmissionRequest'
         required: true
       security:
       - cookieAuth: []
@@ -1043,7 +1043,13 @@ components:
           type: string
           format: date-time
           readOnly: true
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evidence'
+          readOnly: true
       required:
+      - attachments
       - case
       - created_at
       - id
@@ -1059,6 +1065,21 @@ components:
         * `pending` - Pending
         * `accepted` - Accepted
         * `rejected` - Rejected
+    AppealSubmissionRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 4000
+        attachments:
+          type: array
+          items:
+            type: string
+            format: binary
+          maxItems: 5
+      required:
+      - reason
     Audit:
       type: object
       properties:
@@ -1080,6 +1101,10 @@ components:
         actor:
           type: integer
           nullable: true
+        actor_username:
+          type: string
+          nullable: true
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -1089,6 +1114,7 @@ components:
           maxLength: 64
       required:
       - action
+      - actor_username
       - created_at
       - digest
       - id
@@ -1405,6 +1431,7 @@ components:
           type: string
           format: date-time
           readOnly: true
+          nullable: true
       required:
       - captured_at
       - content_type
@@ -1791,15 +1818,6 @@ components:
       - currency
       - idempotency_key
       - reference
-    ReasonRequest:
-      type: object
-      properties:
-        reason:
-          type: string
-          minLength: 5
-          maxLength: 4000
-      required:
-      - reason
     RoleEnum:
       enum:
       - admin

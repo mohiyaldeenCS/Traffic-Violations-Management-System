@@ -8,6 +8,9 @@ describe("role navigation and API boundary", () => {
     );
     expect(navigation("admin").map((x) => x.id)).toContain("audit");
     expect(navigation("reviewer").map((x) => x.id)).not.toContain("payments");
+    expect(navigation("citizen").map((x) => x.id)).toContain("appeals");
+    expect(navigation("appeals").map((x) => x.id)).toContain("appeals");
+    expect(navigation("registrar").map((x) => x.id)).not.toContain("appeals");
   });
   it("preserves validation error detail", () =>
     expect(

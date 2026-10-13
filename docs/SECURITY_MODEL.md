@@ -9,6 +9,7 @@
 | سرقة حساب | password hashing، rate limits، TOTP encrypted، رفض replay | إنتاج يفرض MFA؛ لا recovery آلي بعد |
 | تزوير اعتماد | أدوار منفصلة + منع creator/reviewer من الاعتماد | يحتاج حوكمة provision ومراقبة مسؤول الهوية |
 | تغيير دليل | SHA256 عند المراجعة والإصدار والتنزيل، append-only metadata، custody | ملفات محلية ليست WORM؛ malware scanning وredaction لم ينفذا |
+| كشف مرفق اعتراض | نطاق appeal خاص بصاحب الاعتراض وأدوار لجنة الاعتراضات/التدقيق/الإدارة؛ تنزيل يضيف حدث حيازة | يلزم storage WORM وAV/KMS واختبار اختراق قبل بيانات فعلية |
 | ملف نشط خبيث | حجم10MiB، magic والتحقق من الصورة، attachment/octet-stream، nosniff | PDF validation ليست فحص برمجيات خبيثة؛ قبل الإنتاج اعزل وافحص |
 | دفع مكرر/سباق | قفل Case + unique reference/key + مطابقة amount/currency | اختبار تزامن PostgreSQL؛ لا بوابة مالية حقيقية |
 | تزوير التدقيق | hash chain + قفل متسلسل + trigger | DBA يستطيع إعادة البناء؛ anchor خارجي مطلوب |

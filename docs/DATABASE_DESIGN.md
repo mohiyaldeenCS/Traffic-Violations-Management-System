@@ -13,6 +13,7 @@ erDiagram
   Camera o|--o{ Case : source
   Camera ||--o{ DeviceEvent : observes
   Case ||--o{ Evidence : preserves
+  Appeal ||--o{ Evidence : supports
   Evidence ||--o{ CustodyEvent : tracks
   Case ||--o{ CaseHistory : transitions
   Case ||--o| Appeal : disputes
@@ -22,6 +23,7 @@ erDiagram
 ```
 
 - PROTECT على الروابط القانونية؛ لا DELETE API. PostgreSQL trigger يرفض تعديل/حذف AuditEvent/CaseHistory/Payment/Evidence/CustodyEvent.
+- يرتبط كل Evidence بملف مخالفة أو اعتراض واحد فقط (قيد قاعدة بيانات)؛ مرفقات الاعتراض اختيارية وتستخدم الحفظ الخاص وSHA-256 وسجل الحيازة نفسه. وقت الالتقاط غير معروف لمرفق المواطن ويظل `NULL` بدل اختلاق وقت تصوير.
 - قفل Case قبل انتقال/اعتراض/تحصيل؛ قفل Agency عند إلحاق التدقيق؛ version يمنع تعديل من واجهة قديمة.
 - UNIQUE للجهة+مرجع المصدر، الجهة+مرجع الدفع/idempotency، جهة+رمز قاعدة/كاميرا، جهة+دولة+منطقة+لوحة.
 - CHECK للمبالغ الموجبة. فهرس جهة/حالة/تاريخ وجهة/مالك/تاريخ. صفحة 20 وحد أقصى100.

@@ -10,7 +10,7 @@ async function login(page: Page, role: string) {
     await page.getByRole("button", { name: "تسجيل الخروج" }).click();
   await page.getByLabel("اسم المستخدم", { exact: true }).fill(`demo.${role}`);
   await page.getByLabel("كلمة المرور", { exact: true }).fill(password!);
-  await page.getByRole("button", { name: "الدخول إلى المنصة" }).click();
+  await page.getByRole("button", { name: "متابعة", exact: true }).click();
   await expect(page.locator(".sidebar-bottom strong")).toHaveText(
     `demo.${role}`,
   );
@@ -117,12 +117,29 @@ test("real case lifecycle, evidence, separated duties, appeal, simulated payment
   await page
     .getByLabel("سبب الاعتراض", { exact: true })
     .fill("اعتراض صناعي للتحقق من مسار المراجعة");
+  await page.getByLabel("المستندات المؤيدة").setInputFiles({
+    name: "synthetic-appeal-attachment.png",
+    mimeType: "image/png",
+    buffer: fixture,
+  });
   await page
     .getByRole("button", { name: "إرسال الاعتراض", exact: true })
     .click();
   await expect(
     page.getByRole("status").filter({ hasText: "تم تسجيل الاعتراض" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "الاعتراضات", exact: true }).click();
+  const submittedAppeal = page
+    .getByRole("row")
+    .filter({ hasText: reference! });
+  await expect(
+    submittedAppeal.getByRole("link", { name: "synthetic-appeal-attachment.png" }),
+  ).toBeVisible();
+  const appealDownload = page.waitForEvent("download");
+  await submittedAppeal
+    .getByRole("link", { name: "synthetic-appeal-attachment.png" })
+    .click();
+  expect((await appealDownload).suggestedFilename()).toBe("synthetic-appeal-attachment.png");
   await login(page, "appeals");
   await page.getByRole("button", { name: "الاعتراضات", exact: true }).click();
   await page
@@ -165,9 +182,15 @@ test("real case lifecycle, evidence, separated duties, appeal, simulated payment
   await openCase(page, id);
   await transition(page, "close");
   await login(page, "auditor");
-  await page.getByRole("button", { name: "سجل التدقيق", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "التنقل الرئيسي" })
+    .getByRole("button", { name: "سجل التدقيق", exact: true })
+    .click();
   await expect(page.locator("tbody tr").first()).toBeVisible();
-  await page.getByRole("button", { name: "نظرة عامة", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "التنقل الرئيسي" })
+    .getByRole("button", { name: "نظرة عامة", exact: true })
+    .click();
   await expect(page.locator(".metrics")).toBeVisible();
   await page.screenshot({
     path: testInfo.outputPath("dashboard-desktop.png"),

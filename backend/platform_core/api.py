@@ -166,14 +166,16 @@ class CaseViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Retriev
             result = evidence.add_evidence(request.user, obj, data.validated_data["file"], data.validated_data["source"], data.validated_data["captured_at"])
         return Response(EvidenceSerializer(result).data, status=201)
 
-    @extend_schema(request=ReasonSerializer, responses=AppealSerializer)
+    @extend_schema(request=AppealSubmissionSerializer, responses=AppealSerializer)
     @action(detail=True, methods=["post"])
     def appeals(self, request, pk=None):
         obj = self.get_object()
-        data = ReasonSerializer(data=request.data)
+        data = AppealSubmissionSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        result = appeals.submit_appeal(request.user, obj.pk, data.validated_data["reason"])
-        return Response(AppealSerializer(result).data, status=201)
+        result = appeals.submit_appeal(
+            request.user, obj.pk, data.validated_data["reason"],
+            attachments=data.validated_data.get("attachments", []))
+        return Response(AppealSerializer(result, context={"request": request}).data, status=201)
 
     @extend_schema(request=PaymentInputSerializer, responses=PaymentSerializer)
     @action(detail=True, methods=["post"])
@@ -248,7 +250,16 @@ class EvidenceViewSet(mixins.RetrieveModelMixin, TenantViewSet):
     queryset = Evidence.objects.all()
     serializer_class = EvidenceSerializer
     def get_queryset(self):
-        return super().get_queryset().filter(case__in=cases_for(self.request.user))
+        actor = self.request.user
+        query = super().get_queryset()
+        case_assets = query.filter(appeal__isnull=True, case__in=cases_for(actor))
+        if actor.role == "citizen":
+            appeal_scope = Appeal.objects.filter(agency_id=actor.agency_id, submitted_by=actor)
+        elif actor.role in ("admin", "appeals", "auditor"):
+            appeal_scope = Appeal.objects.filter(agency_id=actor.agency_id)
+        else:
+            appeal_scope = Appeal.objects.none()
+        return (case_assets | query.filter(appeal__in=appeal_scope)).distinct()
     @extend_schema(responses=OpenApiTypes.BINARY)
     @action(detail=True, methods=["get"])
     def download(self, request, pk=None):
@@ -260,10 +271,15 @@ class EvidenceViewSet(mixins.RetrieveModelMixin, TenantViewSet):
         return FileResponse(io.BytesIO(data), as_attachment=True, filename=obj.original_name, content_type="application/octet-stream")
 
 class AppealViewSet(mixins.ListModelMixin, TenantViewSet):
-    queryset = Appeal.objects.select_related("case").all()
+    queryset = Appeal.objects.select_related("case").prefetch_related("evidence").all()
     serializer_class = AppealSerializer
     def get_queryset(self):
-        return super().get_queryset().filter(case__in=cases_for(self.request.user))
+        actor = self.request.user
+        query = super().get_queryset()
+        if actor.role == "citizen":
+            return query.filter(submitted_by=actor)
+        require_role(actor, "admin", "appeals", "auditor")
+        return query
     @extend_schema(request=DecisionSerializer, responses=AppealSerializer)
     @action(detail=True, methods=["post"])
     def decide(self, request, pk=None):
@@ -280,7 +296,7 @@ class PaymentViewSet(mixins.ListModelMixin, TenantViewSet):
         return super().get_queryset().filter(case__in=cases_for(self.request.user))
 
 class AuditViewSet(mixins.ListModelMixin, TenantViewSet):
-    queryset = AuditEvent.objects.all()
+    queryset = AuditEvent.objects.select_related("actor").all()
     serializer_class = AuditSerializer
     def get_queryset(self):
         require_role(self.request.user, "admin", "auditor")

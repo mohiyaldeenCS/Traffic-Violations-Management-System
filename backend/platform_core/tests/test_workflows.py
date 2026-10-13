@@ -1,3 +1,4 @@
+import hashlib
 import io
 import tempfile
 import uuid
@@ -14,7 +15,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 from platform_core.models import *
-from platform_core.domain.audit import verify
+from platform_core.domain.audit import record, verify
 from platform_core.domain import enforcement, evidence
 from platform_core.adapters import *
 
@@ -73,6 +74,21 @@ class WorkflowFixture(TestCase):
         return case
 
 class WorkflowTests(WorkflowFixture):
+    def test_audit_exposes_actor_username_only_to_authorized_roles(self):
+        event = record(self.users["registrar"], "session.login", self.users["registrar"].pk)
+
+        self.as_role("auditor")
+        response = self.client.get("/api/v1/audit/")
+
+        self.assertEqual(response.status_code, 200)
+        audit_row = next(row for row in response.data["results"] if row["id"] == str(event.pk))
+        self.assertEqual(audit_row["actor"], self.users["registrar"].pk)
+        self.assertEqual(audit_row["actor_username"], "registrar")
+
+        self.as_role("registrar")
+        denied = self.client.get("/api/v1/audit/")
+        self.assertEqual(denied.status_code, 403)
+
     def test_full_review_payment_and_close(self):
         case = self.issued_case()
         self.as_role("finance")
@@ -184,6 +200,52 @@ class WorkflowTests(WorkflowFixture):
         self.assertEqual(result.status_code, 200, result.data)
         case.refresh_from_db()
         self.assertEqual(case.status, "cancelled")
+
+    def test_appeal_attachments_are_hashed_and_scoped_to_appellant_and_appeals_team(self):
+        case = self.issued_case()
+        stream = io.BytesIO()
+        Image.new("RGB", (8, 8), "white").save(stream, format="PNG")
+        raw = stream.getvalue()
+        upload = SimpleUploadedFile("supporting-document.png", raw, content_type="image/png")
+        self.as_role("citizen")
+        response = self.client.post(
+            f"/api/v1/cases/{case.pk}/appeals/",
+            {"reason": "Synthetic appeal with a supporting document", "attachments": [upload]},
+            format="multipart")
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(len(response.data["attachments"]), 1)
+        attachment = Evidence.objects.get(appeal_id=response.data["id"])
+        self.assertIsNone(attachment.case_id)
+        self.assertIsNone(attachment.captured_at)
+        self.assertEqual(attachment.sha256, hashlib.sha256(raw).hexdigest())
+        self.assertEqual(CustodyEvent.objects.filter(evidence=attachment, action="ingested").count(), 1)
+        self.assertNotIn("source", response.data["attachments"][0])
+        self.assertEqual(self.client.get(f"/api/v1/evidence/{attachment.pk}/download/").status_code, 200)
+
+        self.client.force_authenticate(self.other_owner)
+        self.assertEqual(self.client.get("/api/v1/appeals/").data["count"], 0)
+        self.assertEqual(self.client.get(f"/api/v1/evidence/{attachment.pk}/download/").status_code, 404)
+        self.as_role("reviewer")
+        self.assertEqual(self.client.get("/api/v1/appeals/").status_code, 403)
+        self.assertEqual(self.client.get(f"/api/v1/evidence/{attachment.pk}/download/").status_code, 404)
+        self.as_role("appeals")
+        appeal_list = self.client.get("/api/v1/appeals/")
+        self.assertEqual(appeal_list.status_code, 200)
+        self.assertEqual(appeal_list.data["results"][0]["attachments"][0]["id"], str(attachment.pk))
+        self.assertEqual(self.client.get(f"/api/v1/evidence/{attachment.pk}/download/").status_code, 200)
+
+    def test_invalid_appeal_attachment_does_not_submit_appeal(self):
+        case = self.issued_case()
+        self.as_role("citizen")
+        response = self.client.post(
+            f"/api/v1/cases/{case.pk}/appeals/",
+            {"reason": "Synthetic appeal with an invalid file", "attachments": [SimpleUploadedFile("bad.png", b"not an image", content_type="image/png")]},
+            format="multipart")
+        self.assertEqual(response.status_code, 400)
+        case.refresh_from_db()
+        self.assertEqual(case.status, "issued")
+        self.assertFalse(Appeal.objects.filter(case=case).exists())
+        self.assertEqual(case.evidence.count(), 1)
 
     def test_rejected_appeal_allows_settlement(self):
         case = self.issued_case()

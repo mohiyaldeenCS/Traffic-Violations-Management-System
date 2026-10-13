@@ -121,10 +121,13 @@ export function navigation(role: Role) {
     { id: "dashboard", label: "نظرة عامة" },
     { id: "cases", label: role === "citizen" ? "مخالفاتي" : "ملفات المخالفات" },
     { id: "vehicles", label: "المركبات" },
-    { id: "appeals", label: "الاعتراضات" },
     { id: "payments", label: "سجل السداد" },
     { id: "notifications", label: "الإشعارات" },
   ];
+  if (["admin", "appeals", "auditor", "citizen"].includes(role))
+    items.splice(3, 0, { id: "appeals", label: "الاعتراضات" });
+  if (["reviewer", "approver"].includes(role))
+    items.splice(1, 0, { id: "review", label: "المراجعة" });
   if (role !== "citizen")
     items.splice(
       3,

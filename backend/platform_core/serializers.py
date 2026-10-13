@@ -95,9 +95,17 @@ class CaseSerializer(TenantSerializer):
 
 class AppealSerializer(serializers.ModelSerializer):
     reference = serializers.CharField(source="case.reference", read_only=True)
+    attachments = EvidenceSerializer(source="evidence", many=True, read_only=True)
     class Meta:
         model = Appeal
-        fields = ["id", "case", "reference", "reason", "status", "decision_reason", "created_at"]
+        fields = ["id", "case", "reference", "reason", "status", "decision_reason", "created_at", "attachments"]
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+        request = self.context.get("request")
+        if request and request.user.role == "citizen":
+            for attachment in result["attachments"]:
+                attachment.pop("source", None)
+        return result
 
 class PaymentSerializer(serializers.ModelSerializer):
     case_reference = serializers.CharField(source="case.reference", read_only=True)
@@ -106,9 +114,14 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = ["id", "case", "case_reference", "reference", "amount", "currency", "created_at", "simulated"]
 
 class AuditSerializer(serializers.ModelSerializer):
+    actor_username = serializers.SerializerMethodField()
+
     class Meta:
         model = AuditEvent
-        fields = ["id", "sequence", "action", "target", "actor", "created_at", "digest"]
+        fields = ["id", "sequence", "action", "target", "actor", "actor_username", "created_at", "digest"]
+
+    def get_actor_username(self, obj) -> str | None:
+        return obj.actor.username if obj.actor_id else None
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -141,6 +154,13 @@ class EvidenceUploadSerializer(serializers.Serializer):
 
 class ReasonSerializer(serializers.Serializer):
     reason = serializers.CharField(min_length=5, max_length=4000)
+
+class AppealSubmissionSerializer(ReasonSerializer):
+    attachments = serializers.ListField(child=serializers.FileField(), required=False, max_length=5)
+    def validate_attachments(self, value):
+        if sum(file.size for file in value) > 25 * 1024 * 1024:
+            raise serializers.ValidationError("إجمالي المرفقات لا يتجاوز 25 ميجابايت.")
+        return value
 
 class DecisionSerializer(ReasonSerializer):
     decision = serializers.ChoiceField(choices=["accepted", "rejected"])

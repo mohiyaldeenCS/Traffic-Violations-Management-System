@@ -109,7 +109,8 @@ class CaseHistory(TenantRecord):
     reason = models.CharField(max_length=2000)
 
 class Evidence(TenantRecord):
-    case = models.ForeignKey(Case, on_delete=models.PROTECT, related_name="evidence")
+    case = models.ForeignKey(Case, on_delete=models.PROTECT, related_name="evidence", null=True, blank=True)
+    appeal = models.ForeignKey("Appeal", on_delete=models.PROTECT, related_name="evidence", null=True, blank=True)
     uploaded_by = models.ForeignKey(User, on_delete=models.PROTECT)
     original_name = models.CharField(max_length=200)
     content_type = models.CharField(max_length=80)
@@ -117,7 +118,9 @@ class Evidence(TenantRecord):
     sha256 = models.CharField(max_length=64)
     size = models.PositiveIntegerField()
     source = models.CharField(max_length=200)
-    captured_at = models.DateTimeField()
+    captured_at = models.DateTimeField(null=True, blank=True)
+    class Meta:
+        constraints = [models.CheckConstraint(condition=(Q(case__isnull=False, appeal__isnull=True) | Q(case__isnull=True, appeal__isnull=False)), name="evidence_single_parent")]
 
 class CustodyEvent(TenantRecord):
     evidence = models.ForeignKey(Evidence, on_delete=models.PROTECT, related_name="custody")

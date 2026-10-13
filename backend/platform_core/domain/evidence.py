@@ -43,24 +43,38 @@ def validate_file(upload):
             raise ValidationError("نوع الملف غير مدعوم أو الملف تالف.")
     return data, content_type
 
+def _persist_evidence(actor, upload, source, captured_at, prepared, case=None, appeal=None):
+    if (case is None) == (appeal is None):
+        raise ValidationError("يجب ربط الدليل بملف مخالفة أو اعتراض واحد فقط.")
+    data, content_type = prepared
+    key = f"{actor.agency_id}/{uuid.uuid4().hex}"
+    path = evidence_path(key)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("xb") as stream:
+        stream.write(data)
+    # Files left behind after a database rollback are retained for reconciliation, never reassigned.
+    asset = Evidence.objects.create(
+        agency_id=actor.agency_id, case=case, appeal=appeal, uploaded_by=actor,
+        original_name=Path(upload.name).name[:200], content_type=content_type,
+        storage_key=key, sha256=hashlib.sha256(data).hexdigest(), size=len(data),
+        source=source, captured_at=captured_at)
+    CustodyEvent.objects.create(agency_id=actor.agency_id, evidence=asset, actor=actor, action="ingested", digest=asset.sha256)
+    target_type, target_id = ("case", case.pk) if case else ("appeal", appeal.pk)
+    action = "evidence.ingested" if case else "appeal.evidence.ingested"
+    record(actor, action, asset.pk, {target_type: str(target_id), "sha256": asset.sha256})
+    return asset
+
 @transaction.atomic
 def add_evidence(actor, case, upload, source, captured_at):
     require_role(actor, "registrar", "reviewer")
     if case.status not in ("draft", "review"):
         raise ValidationError("أغلقت إضافة الأدلة بعد الاعتماد.")
-    data, content_type = validate_file(upload)
-    key = f"{case.agency_id}/{uuid.uuid4().hex}"
-    path = evidence_path(key)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("xb") as stream:
-        stream.write(data)
-    # Orphans after transaction rollback are retained for reconciliation, never reassigned.
-    evidence = Evidence.objects.create(
-        agency_id=case.agency_id, case=case, uploaded_by=actor,
-        original_name=Path(upload.name).name[:200], content_type=content_type,
-        storage_key=key, sha256=hashlib.sha256(data).hexdigest(), size=len(data),
-        source=source, captured_at=captured_at)
-    CustodyEvent.objects.create(agency_id=case.agency_id, evidence=evidence, actor=actor, action="ingested", digest=evidence.sha256)
-    record(actor, "evidence.ingested", evidence.pk, {"case": str(case.pk), "sha256": evidence.sha256})
-    return evidence
+    return _persist_evidence(actor, upload, source, captured_at, validate_file(upload), case=case)
+
+@transaction.atomic
+def add_appeal_evidence(actor, appeal, upload, prepared):
+    require_role(actor, "citizen")
+    if appeal.submitted_by_id != actor.pk or appeal.case.owner_id != actor.pk or appeal.status != "pending":
+        raise ValidationError("لا تملك صلاحية إرفاق مستند بهذا الاعتراض.")
+    return _persist_evidence(actor, upload, "citizen appeal submission", None, prepared, appeal=appeal)
 

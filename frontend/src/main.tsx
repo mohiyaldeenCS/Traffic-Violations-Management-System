@@ -32,13 +32,21 @@ function Icon({ name = "grid" }: { name?: string }) {
     arrow: "M14 5l-7 7 7 7 M7 12h14",
     logout: "M9 3H3v18h6 M14 7l5 5-5 5 M8 12h11",
     plus: "M12 4v16 M4 12h16",
+    menu: "M4 7h16 M4 12h16 M4 17h16",
+    check: "M5 12l4 4L19 6",
+    clock: "M12 8v4l3 2 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
+    close: "M18 6L6 18 M6 6l12 12",
+    alert: "M12 9v4 M12 17h.01 M10.3 3.9L1.8 18.4A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0z",
+    calendar: "M8 3v4 M16 3v4 M4 9h16 M5 5h14a1 1 0 0 1 1 1v13H4V6a1 1 0 0 1 1-1z M8 13h3 M8 16h3",
+    review: "M8 4h12v16H8z M4 8v12h12 M11 10h6 M11 14h3 M11 17l1.5 1.5L16 15",
+    filter: "M4 5h16l-6.5 7.5v5l-3 1.5v-6.5z",
   };
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.6"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -48,9 +56,18 @@ function Icon({ name = "grid" }: { name?: string }) {
   );
 }
 function Status({ value }: { value: unknown }) {
+  const status = s(value);
+  const icon = ["approved", "issued", "paid", "closed", "online", "accepted"].includes(status)
+    ? "check"
+    : ["cancelled", "rejected"].includes(status)
+      ? "close"
+      : ["review", "approval", "appealed", "pending", "draft"].includes(status)
+        ? "clock"
+        : "alert";
   return (
-    <span className={`status status-${s(value)}`}>
-      {statusNames[s(value)] || s(value)}
+    <span className={`status status-${status}`}>
+      <Icon name={icon} />
+      <span>{statusNames[status] || status}</span>
     </span>
   );
 }
@@ -74,14 +91,17 @@ function Loading() {
 }
 function Empty({
   children = "لا توجد سجلات لعرضها حاليًا.",
+  action,
 }: {
   children?: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   return (
     <div className="empty">
       <Icon name="cases" />
       <h3>السجل خالٍ</h3>
       <p>{children}</p>
+      {action && <div className="empty-action">{action}</div>}
     </div>
   );
 }
@@ -103,14 +123,15 @@ function Field({
     </label>
   );
 }
-function Brand() {
+function Brand({ inverse = false }: { inverse?: boolean }) {
   return (
     <div className="brand">
-      <span className="brand-mark">
-        <i />
-        <i />
-        <i />
-      </span>
+      <svg className={`brand-mark ${inverse ? "brand-mark-inverse" : ""}`} viewBox="0 0 40 40" role="img" aria-label="شعار رَصد">
+        <rect x="1" y="1" width="38" height="38" rx={inverse ? "7" : "10"} fill={inverse ? "#fff" : "currentColor"} />
+        <circle cx="20" cy="20" r="9" fill="none" stroke={inverse ? "#14513F" : "#fff"} strokeWidth={inverse ? "3.3" : "2.2"} strokeDasharray={inverse ? "49 14" : "48 9"} strokeDashoffset="4" transform={inverse ? "rotate(-6 20 20)" : undefined} />
+        <circle cx={inverse ? "26.5" : "27.5"} cy={inverse ? "13.5" : "12.7"} r={inverse ? "2.9" : "2.5"} fill="#C9A24B" />
+        <circle cx="20" cy="20" r="2.1" fill={inverse ? "#14513F" : "#fff"} />
+      </svg>
       <div>
         <strong>رَصد</strong>
         <span>المخالفات والسلامة المرورية</span>
@@ -143,37 +164,19 @@ function Login({ onLogin }: { onLogin: (v: Session) => void }) {
   return (
     <main className="login-shell">
       <section className="login-story">
-        <Brand />
+        <Brand inverse />
         <div>
-          <p className="eyebrow">إجراءات واضحة. قرارات موثقة.</p>
-          <h1>
-            كل ملف له مسار.
-            <br />
-            وكل قرار له أثر.
-          </h1>
-          <p>
-            مساحة عمل موحدة لمراجعة المخالفات، توثيق الأدلة، ومتابعة الاعتراضات
-            والسداد.
-          </p>
-          <div className="login-process">
-            <span>
-              01 <b>رصد وتوثيق</b>
-            </span>
-            <span>
-              02 <b>مراجعة واعتماد</b>
-            </span>
-            <span>
-              03 <b>تبليغ ومتابعة</b>
-            </span>
-          </div>
+          <h1>قضية موثَّقة من التسجيل حتى الإغلاق</h1>
+          <p>نظام إدارة المخالفات المرورية</p>
         </div>
         <small>منصة تقييم مستقلة • لا تمثل جهة حكومية</small>
       </section>
       <section className="login-panel">
         <div className="login-form">
-          <p className="eyebrow">أهلًا بك في رَصد</p>
-          <h2>تسجيل الدخول</h2>
-          <p className="muted">استخدم الحساب الذي خصصه لك مسؤول الجهة.</p>
+          <div className="login-intro">
+            <h2>تسجيل الدخول</h2>
+            <p className="muted">أدخل بيانات حسابك للمتابعة.</p>
+          </div>
           <Message error={error} />
           <form onSubmit={submit}>
             <Field label="اسم المستخدم">
@@ -207,7 +210,7 @@ function Login({ onLogin }: { onLogin: (v: Session) => void }) {
               />
             </Field>
             <button className="primary wide" disabled={busy}>
-              {busy ? "جارٍ التحقق…" : "الدخول إلى المنصة"}
+              {busy ? "جارٍ التحقق…" : "متابعة"}
               <Icon name="arrow" />
             </button>
           </form>
@@ -239,7 +242,13 @@ function Dashboard({
   const [data, setData] = useState<DashboardData | null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
-    [recent, setRecent] = useState<Row[]>([]);
+    [recent, setRecent] = useState<Row[]>([]),
+    [recentAudit, setRecentAudit] = useState<Row[]>([]);
+  const statusRows = [...(data?.by_status || [])].sort((a, b) => b.total - a.total);
+  const topStatusCount = Math.max(1, ...statusRows.map((row) => row.total));
+  const offlineCameras = data
+    ? Math.max(0, data.cameras_total - data.cameras_online)
+    : 0;
   useEffect(() => {
     let live = true;
     Promise.all([
@@ -247,11 +256,15 @@ function Dashboard({
         ? Promise.resolve(null)
         : api<DashboardData>("dashboard/"),
       api<Page>("cases/?page_size=5"),
+      ["admin", "auditor"].includes(session.role)
+        ? api<Page>("audit/?page_size=4").catch(() => null)
+        : Promise.resolve(null),
     ])
-      .then(([d, c]) => {
+      .then(([d, c, audit]) => {
         if (live) {
           setData(d);
           setRecent(c.results);
+          setRecentAudit(audit?.results || []);
         }
       })
       .catch((e) => {
@@ -281,11 +294,10 @@ function Dashboard({
               : "هذه أحدث الأرقام المسجلة لدى جهتك."}
           </p>
         </div>
-        <span className="date-tag">
-          {new Intl.DateTimeFormat("ar", { dateStyle: "full" }).format(
-            new Date(),
-          )}
-        </span>
+        <div className="dashboard-date-range" aria-label="النطاق الزمني للبيانات">
+          <Icon name="calendar" />
+          <span><small>النطاق الزمني</small><strong>جميع السجلات المتاحة</strong></span>
+        </div>
       </div>
       <Message error={error} />
       {session.role !== "citizen" && !data && !error ? (
@@ -310,77 +322,78 @@ function Dashboard({
                 <small>تحتاج فحص الأدلة</small>
               </article>
               <article>
-                <span>أجهزة الرصد المتصلة</span>
+                <span>حالة محاكي الرصد</span>
                 <strong>
                   {data.cameras_online.toLocaleString("ar")}
                   <em> / {data.cameras_total.toLocaleString("ar")}</em>
                 </strong>
-                <small>الحالة المسجلة لدى الخادم</small>
+                <small>بيانات اصطناعية في بيئة التقييم</small>
               </article>
               <article>
-                <span>رسائل بانتظار التسليم</span>
+                <span>إشعارات بانتظار المعالجة</span>
                 <strong>{data.pending_outbox.toLocaleString("ar")}</strong>
-                <small>قائمة إرسال الإشعارات</small>
+                <small>قائمة تجريبية؛ بلا إرسال خارجي</small>
               </article>
             </section>
-            <section className="overview-split">
-              <div className="panel">
+            <section className="dashboard-analytics" aria-label="تحليلات الملفات وأجهزة الرصد">
+              <section className="panel ranked-panel">
                 <div className="panel-heading">
-                  <h2>توزيع حالات الملفات</h2>
-                  <span className="subtle">بيانات فعلية</span>
+                  <div><p className="eyebrow">توزيع الملفات</p><h2>حسب الحالة</h2><p>ترتيب تنازلي من السجلات المتاحة للجهة.</p></div>
+                  <span className="chart-total"><strong>{data.total.toLocaleString("ar")}</strong><small>ملف</small></span>
                 </div>
-                {data.by_status.length ? (
-                  <div className="status-distribution">
-                    {data.by_status.map((row) => (
-                      <div key={row.status}>
-                        <span>{statusNames[row.status] || row.status}</span>
-                        <div className="bar-track">
-                          <span
-                            style={{
-                              width: `${data.total ? (row.total / data.total) * 100 : 0}%`,
-                            }}
-                          />
-                        </div>
-                        <strong>{row.total.toLocaleString("ar")}</strong>
-                      </div>
+                {statusRows.length ? (
+                  <ol className="ranked-list" aria-label="عدد الملفات حسب الحالة">
+                    {statusRows.map((row, index) => (
+                      <li className="ranked-row" key={row.status}>
+                        <span className="rank-index">{(index + 1).toLocaleString("ar")}</span>
+                        <span className="rank-label">{statusNames[row.status] || row.status}</span>
+                        <span className="rank-track" aria-hidden="true"><i style={{ width: `${Math.round((row.total / topStatusCount) * 100)}%` }} /></span>
+                        <strong className="rank-value">{row.total.toLocaleString("ar")}</strong>
+                      </li>
                     ))}
+                  </ol>
+                ) : (
+                  <div className="ranked-empty">
+                    <span className="empty-zero" aria-hidden="true" dir="ltr">0</span>
+                    <div><strong>لا توجد ملفات في السجل بعد</strong><p>سيظهر توزيع الحالات هنا عند توفر سجلات فعلية في هذه البيئة.</p></div>
+                    <button className={session.role === "registrar" ? "primary" : "secondary"} onClick={() => go("cases")}>{session.role === "registrar" ? "تسجيل مخالفة" : "عرض ملفات المخالفات"} <Icon name="arrow" /></button>
                   </div>
-                ) : (
-                  <Empty>تظهر حالة العمل بعد تسجيل أول مخالفة.</Empty>
                 )}
-              </div>
-              <div className="panel collection">
+              </section>
+              <section className="panel ranked-panel device-panel">
                 <div className="panel-heading">
-                  <h2>السداد المسجل</h2>
-                  <Icon name="payments" />
+                  <div><p className="eyebrow">حالة المحاكي</p><h2>أجهزة الرصد</h2><p>قيم تجريبية مسجلة؛ لا تمثل اتصالًا ميدانيًا.</p></div>
+                  <span className="device-total"><Icon name="cameras" /><strong>{data.cameras_total.toLocaleString("ar")}</strong><small>جهاز</small></span>
                 </div>
-                {data.collected.length ? (
-                  data.collected.map((row) => (
-                    <div key={row.currency} className="collection-value">
-                      <strong>{row.total}</strong>
-                      <span>{row.currency}</span>
-                    </div>
-                  ))
+                {data.cameras_total > 0 ? (
+                  <ol className="ranked-list device-rankings" aria-label="حالة أجهزة الرصد التجريبية">
+                    {[{ label: "متصلة", amount: data.cameras_online, status: "online" }, { label: "غير متصلة", amount: offlineCameras, status: "offline" }].map((entry, index) => (
+                      <li className={`ranked-row ${entry.status}`} key={entry.status}>
+                        <span className="rank-index">{(index + 1).toLocaleString("ar")}</span>
+                        <span className="rank-label">{entry.label}</span>
+                        <span className="rank-track" aria-hidden="true"><i style={{ width: `${Math.round((entry.amount / data.cameras_total) * 100)}%` }} /></span>
+                        <strong className="rank-value">{entry.amount.toLocaleString("ar")}</strong>
+                      </li>
+                    ))}
+                  </ol>
                 ) : (
-                  <p className="muted">لا توجد مبالغ مسددة.</p>
+                  <div className="ranked-empty device-empty">
+                    <span className="empty-zero" aria-hidden="true" dir="ltr">0</span>
+                    <div><strong>لا توجد أجهزة في السجل</strong><p>٠ من ٠ — لا توجد بيانات اتصال ميداني.</p></div>
+                  </div>
                 )}
-                <p className="subtle">
-                  حسب العملة؛ تشمل البيئة التجريبية عمليات المحاكاة المسجلة.
-                </p>
-                {["admin", "finance", "auditor"].includes(session.role) && (
-                  <button
-                    className="text-button"
-                    onClick={() => go("payments")}
-                  >
-                    عرض سجل السداد ←
-                  </button>
-                )}
-              </div>
+              </section>
             </section>
+            <div className="dashboard-collection-summary">
+              <span>مبالغ السداد المسجلة</span>
+              {data.collected.length ? data.collected.map((row) => <strong key={row.currency}>{row.total} <small>{row.currency}</small></strong>) : <strong className="collection-none">لا توجد مبالغ مسجلة</strong>}
+              {["admin", "finance", "auditor"].includes(session.role) && <button className="text-button" onClick={() => go("payments")}>عرض سجل السداد <Icon name="arrow" /></button>}
+            </div>
           </>
         )
       )}
-      <section className="panel">
+      <section className={`dashboard-lower-grid ${["admin", "auditor"].includes(session.role) ? "has-audit" : ""}`}>
+      <section className="panel recent-cases-panel">
         <div className="panel-heading">
           <div>
             <h2>آخر الملفات</h2>
@@ -398,14 +411,45 @@ function Dashboard({
           <CaseTable rows={recent} go={go} />
         )}
       </section>
+      {["admin", "auditor"].includes(session.role) && (
+        <section className="panel audit-excerpt">
+          <div className="panel-heading">
+            <div><p className="eyebrow">أثر موثق</p><h2>آخر الإجراءات</h2></div>
+            <button className="text-button" onClick={() => go("audit")}>سجل التدقيق <Icon name="arrow" /></button>
+          </div>
+          {loading ? <Loading /> : recentAudit.length ? (
+            <ol className="audit-list">
+              {recentAudit.map((event) => (
+                <li key={event.id}>
+                  <span className="audit-event-mark" aria-hidden="true"><Icon name="audit" /></span>
+                  <div><strong>{auditActionName(s(event.action))}</strong><small>{auditExcerptActor(event.actor_username)} <span>·</span> {dateValue(event.created_at)}</small></div>
+                </li>
+              ))}
+            </ol>
+          ) : <div className="audit-empty"><span aria-hidden="true">—</span><p>لا توجد إجراءات مدونة بعد.</p></div>}
+        </section>
+      )}
+      </section>
     </>
   );
 }
-function CaseTable({ rows, go }: { rows: Row[]; go: (p: string) => void }) {
+function CaseTable({
+  rows,
+  go,
+  emptyMessage = "لا توجد ملفات مسجلة بعد.",
+  emptyAction,
+  density = "comfortable",
+}: {
+  rows: Row[];
+  go: (p: string) => void;
+  emptyMessage?: string;
+  emptyAction?: React.ReactNode;
+  density?: "comfortable" | "compact";
+}) {
   return rows.length ? (
     <>
       <div
-        className="table-wrap"
+        className={`table-wrap case-table ${density === "compact" ? "is-compact" : ""}`}
         role="region"
         aria-label="جدول ملفات المخالفات"
         tabIndex={0}
@@ -464,7 +508,7 @@ function CaseTable({ rows, go }: { rows: Row[]; go: (p: string) => void }) {
           </tbody>
         </table>
       </div>
-      <div className="case-cards" role="list" aria-label="ملفات المخالفات">
+      <div className={`case-cards ${density === "compact" ? "is-compact" : ""}`} role="list" aria-label="ملفات المخالفات">
         {rows.map((row) => (
           <article className="case-card" role="listitem" key={row.id}>
             <header className="case-card-header">
@@ -505,9 +549,7 @@ function CaseTable({ rows, go }: { rows: Row[]; go: (p: string) => void }) {
       </div>
     </>
   ) : (
-    <Empty>
-      لا توجد ملفات مطابقة. يمكنك تعديل عوامل البحث أو العودة لاحقًا.
-    </Empty>
+    <Empty action={emptyAction}>{emptyMessage}</Empty>
   );
 }
 const listColumns: Record<string, [string, string][]> = {
@@ -541,6 +583,7 @@ const listColumns: Record<string, [string, string][]> = {
   appeals: [
     ["reference", "رقم المخالفة"],
     ["reason", "سبب الاعتراض"],
+    ["attachments", "المستندات"],
     ["status", "الحالة"],
     ["decision_reason", "سبب القرار"],
     ["created_at", "التاريخ"],
@@ -554,12 +597,12 @@ const listColumns: Record<string, [string, string][]> = {
     ["created_at", "التاريخ"],
   ],
   audit: [
-    ["sequence", "التسلسل"],
+    ["sequence", "رقم التسلسل"],
     ["action", "الإجراء"],
-    ["target", "السجل"],
+    ["target", "الأثر المرتبط"],
     ["actor", "المنفذ"],
     ["created_at", "التاريخ"],
-    ["digest", "بصمة التدقيق"],
+    ["digest", "بصمة التحقق"],
   ],
   notifications: [
     ["topic", "الموضوع"],
@@ -569,6 +612,7 @@ const listColumns: Record<string, [string, string][]> = {
   ],
 };
 const resourceTitles: Record<string, string> = {
+  review: "مراجعة القضايا",
   cases: "ملفات المخالفات",
   vehicles: "سجل المركبات",
   cameras: "أجهزة الرصد",
@@ -580,6 +624,7 @@ const resourceTitles: Record<string, string> = {
   users: "إدارة المستخدمين",
 };
 const resourceDescriptions: Record<string, string> = {
+  review: "افتح ملفات المخالفات المتاحة لدورك وتابع خطوة المراجعة أو الاعتماد المصرح بها.",
   cases: "ابحث عن ملف، راجع الأدلة، وتابع خطوات المعالجة.",
   vehicles: "المركبات المسجلة وملكية كل مركبة داخل الجهة.",
   cameras: "بيانات الأجهزة وحالتها المسجلة. لا تتوفر بثوث مباشرة.",
@@ -634,14 +679,167 @@ const notificationTopics: Record<string, string> = {
   "appeal.decided": "صدر قرار في اعتراضك",
   "payment.recorded": "تم تسجيل السداد",
 };
+const auditActionLabels: Record<string, string> = {
+  "session.login": "تسجيل الدخول",
+  "session.logout": "تسجيل الخروج",
+  "case.created": "تسجيل مخالفة",
+  "case.review": "مراجعة ملف مخالفة",
+  "case.approval": "إحالة للاعتماد",
+  "case.approved": "اعتماد مخالفة",
+  "case.issued": "إصدار وتبليغ مخالفة",
+  "case.appealed": "تسجيل اعتراض",
+  "case.paid": "تسجيل السداد",
+  "case.closed": "إغلاق ملف مخالفة",
+  "case.cancelled": "إلغاء مخالفة",
+  "cases.export": "تصدير ملفات المخالفات",
+  "evidence.ingested": "إرفاق دليل",
+  "evidence.download": "تنزيل دليل",
+  "evidence.package": "تصدير حزمة الأدلة",
+  "receipt.read": "عرض إيصال سداد",
+  "user.created": "إنشاء حساب مستخدم",
+  "vehicle.created": "إضافة مركبة",
+  "camera.created": "إضافة جهاز رصد تجريبي",
+  "rule.created": "إضافة قاعدة تقييم",
+  "device.simulated_observation": "محاكاة قراءة جهاز رصد",
+  "legacy.import": "استيراد بيانات قديمة",
+};
+function auditActionName(action: string) {
+  return auditActionLabels[action] || "إجراء تشغيلي مسجل";
+}
+function auditActorLabel(value: unknown) {
+  if (value === null || value === undefined || value === "") return "حساب مستخدم غير متاح";
+  return s(value);
+}
+function auditExcerptActor(value: unknown) {
+  if (value === null || value === undefined || value === "") return "منفّذ غير محدد";
+  return `المنفّذ: ${s(value)}`;
+}
+function auditTargetLabel(action: string, value: unknown) {
+  if (action === "session.login" || action === "session.logout")
+    return "جلسة مستخدم · غير مرتبطة بملف مخالفة";
+  if (action === "cases.export") return "تصدير قائمة ملفات المخالفات · CSV";
+  if (action === "legacy.import") return "عملية استيراد · مرجع تحقق داخلي";
+  const category = action.split(".")[0];
+  const labels: Record<string, string> = {
+    case: "ملف مخالفة",
+    evidence: "دليل مرفق",
+    user: "حساب مستخدم",
+    vehicle: "سجل مركبة",
+    camera: "جهاز رصد تجريبي",
+    rule: "قاعدة تقييم",
+    receipt: "سجل إيصال",
+    device: "عملية محاكاة جهاز",
+  };
+  if (category === "payment") return `سجل سداد · مرجع داخلي ${s(value)}`;
+  return labels[category]
+    ? `${labels[category]} · مرجع داخلي ${s(value)}`
+    : `سجل مرتبط · مرجع داخلي ${s(value)}`;
+}
+function CopyDigest({ value }: { value: unknown }) {
+  const [copied, setCopied] = useState(false);
+  const digest = s(value);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(digest);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
+  return (
+    <div className="audit-digest">
+      <code dir="ltr">{digest === "—" ? digest : `${digest.slice(0, 12)}…`}</code>
+      {digest !== "—" && <button type="button" className="copy-digest" aria-label="نسخ بصمة SHA-256 كاملة" onClick={() => void copy()}>{copied ? "تم النسخ" : "نسخ"}</button>}
+      {digest !== "—" && <details><summary>عرض البصمة كاملة</summary><code dir="ltr">{digest}</code></details>}
+    </div>
+  );
+}
+function AuditCard({ row }: { row: Row }) {
+  return (
+    <article className="audit-card" role="listitem">
+      <header><span className="audit-event-mark"><Icon name="audit" /></span><strong>{auditActionName(s(row.action))}</strong><time>{dateValue(row.created_at)}</time></header>
+      <dl>
+        <div><dt>المنفّذ</dt><dd>{auditActorLabel(row.actor_username)}</dd></div>
+        <div><dt>الأثر</dt><dd>{auditTargetLabel(s(row.action), row.target)}</dd></div>
+      </dl>
+      <details className="audit-card-details">
+        <summary>تفاصيل التتبع والبصمة</summary>
+        <div className="audit-secondary"><span>التسلسل <b>{s(row.sequence)}</b></span><CopyDigest value={row.digest} /></div>
+      </details>
+    </article>
+  );
+}
+function ResourceValue({
+  resource,
+  field,
+  row,
+  session,
+  go,
+  onReview,
+}: {
+  resource: string;
+  field: string;
+  row: Row;
+  session: Session;
+  go: (path: string) => void;
+  onReview: (row: Row) => void;
+}) {
+  if (resource === "audit") {
+    if (field === "action") return <>{auditActionName(s(row.action))}</>;
+    if (field === "target") return <>{auditTargetLabel(s(row.action), row.target)}</>;
+    if (field === "actor") return <>{auditActorLabel(row.actor_username)}</>;
+    if (field === "digest") return <CopyDigest value={row.digest} />;
+  }
+  if (
+    (field === "case_reference" ||
+      (resource === "appeals" && field === "reference")) &&
+    row.case
+  )
+    return (
+      <button className="reference" onClick={() => go(`cases/${row.case}`)}>
+        {s(row[field])}
+      </button>
+    );
+  if (resource === "appeals" && field === "attachments") {
+    const attachments = Array.isArray(row.attachments)
+      ? (row.attachments as Row[])
+      : [];
+    return attachments.length ? (
+      <ul className="appeal-attachments">
+        {attachments.map((file) => (
+          <li key={file.id}>
+            <a href={`${ROOT}evidence/${file.id}/download/`}>
+              {s(file.original_name)}
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <>لا توجد مرفقات</>
+    );
+  }
+  if (field === "status") return <Status value={row[field]} />;
+  if (field === "payload") return <NotificationPayload value={row[field]} go={go} />;
+  if (field === "topic") return <>{notificationTopics[s(row[field])] || s(row[field])}</>;
+  if (field === "role")
+    return <>{roleNames[row[field] as keyof typeof roleNames] || s(row[field])}</>;
+  if (field.endsWith("_at")) return <>{dateValue(row[field])}</>;
+  if (typeof row[field] === "boolean") return <>{row[field] ? "نعم" : "لا"}</>;
+  if (resource === "appeals" && field === "status" && row.status === "pending" && session.role === "appeals")
+    return <button className="secondary" onClick={() => onReview(row)}>مراجعة الاعتراض</button>;
+  return <>{s(row[field])}</>;
+}
 function Resource({
   resource,
   session,
   go,
+  reviewQueue = false,
 }: {
   resource: string;
   session: Session;
   go: (p: string) => void;
+  reviewQueue?: boolean;
 }) {
   const [data, setData] = useState<Page | null>(null),
     [error, setError] = useState(""),
@@ -649,7 +847,8 @@ function Resource({
     [page, setPage] = useState(1),
     [query, setQuery] = useState(""),
     [search, setSearch] = useState(""),
-    [status, setStatus] = useState(""),
+    [status, setStatus] = useState(reviewQueue && session.role === "approver" ? "approval" : reviewQueue && session.role === "reviewer" ? "review" : ""),
+    [density, setDensity] = useState<"comfortable" | "compact">("comfortable"),
     [create, setCreate] = useState(false),
     [revision, setRevision] = useState(0),
     [decision, setDecision] = useState<Row | null>(null);
@@ -678,8 +877,8 @@ function Resource({
       <div className="page-heading">
         <div>
           <p className="eyebrow">مساحة العمل / السجلات</p>
-          <h1>{resourceTitles[resource]}</h1>
-          <p>{resourceDescriptions[resource]}</p>
+          <h1>{reviewQueue ? resourceTitles.review : resourceTitles[resource]}</h1>
+          <p>{reviewQueue ? resourceDescriptions.review : resourceDescriptions[resource]}</p>
         </div>
         <div className="actions">
           {resource === "cases" &&
@@ -702,6 +901,17 @@ function Resource({
           حقيقي.
         </div>
       )}
+      {reviewQueue && session.role === "reviewer" && (
+        <div className="review-queue-block">
+          <div className="review-tabs" role="group" aria-label="تصنيفات ملفات المراجعة">
+            <button type="button" aria-pressed={status === "review"} className={status === "review" ? "is-active" : ""} onClick={() => { setStatus("review"); setPage(1); }}>بانتظار المراجعة</button>
+            <button type="button" aria-pressed="false" aria-disabled="true" disabled title="لا يوجد تصنيف مستقل للأدلة الناقصة في بيانات النظام الحالية.">أدلة ناقصة</button>
+            <button type="button" aria-pressed={status === "approval"} className={status === "approval" ? "is-active" : ""} onClick={() => { setStatus("approval"); setPage(1); }}>تمت مراجعتها</button>
+          </div>
+          <p className="review-tab-note" role="note">تصنيف «أدلة ناقصة» غير متاح كمرشح مستقل في البيانات الحالية. يعرض تبويب «تمت مراجعتها» الملفات المحالة إلى الاعتماد بعد فحص الأدلة.</p>
+        </div>
+      )}
+      {reviewQueue && session.role === "approver" && <div className="review-queue-note"><Icon name="review" /><span><strong>قائمة الاعتماد</strong><small>الملفات المحالة بعد مراجعة الأدلة.</small></span></div>}
       <section className="panel">
         <div className="toolbar">
           {resource === "cases" && (
@@ -729,32 +939,37 @@ function Resource({
             </form>
           )}
           {resource === "cases" && (
-            <select
-              aria-label="تصفية حسب الحالة"
-              value={status}
-              onChange={(e) => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">جميع الحالات</option>
-              {[
-                "draft",
-                "review",
-                "approval",
-                "approved",
-                "issued",
-                "appealed",
-                "paid",
-                "closed",
-                "cancelled",
-              ].map((v) => (
-                <option key={v} value={v}>
-                  {statusNames[v]}
-                </option>
-              ))}
-            </select>
+            <label className="status-filter">
+              <Icon name="filter" />
+              <span>تصفية</span>
+              <select
+                aria-label="تصفية حسب الحالة"
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">جميع الحالات</option>
+                {[
+                  "draft",
+                  "review",
+                  "approval",
+                  "approved",
+                  "issued",
+                  "appealed",
+                  "paid",
+                  "closed",
+                  "cancelled",
+                ].map((v) => (
+                  <option key={v} value={v}>
+                    {statusNames[v]}
+                  </option>
+                ))}
+              </select>
+            </label>
           )}
+          {reviewQueue && <div className="density-control" role="group" aria-label="كثافة عرض الجدول"><span>كثافة العرض</span><button type="button" className={density === "comfortable" ? "is-active" : ""} aria-pressed={density === "comfortable"} onClick={() => setDensity("comfortable")}>مريح</button><button type="button" className={density === "compact" ? "is-active" : ""} aria-pressed={density === "compact"} onClick={() => setDensity("compact")}>مضغوط</button></div>}
           <span className="count">
             {data ? `${data.count.toLocaleString("ar")} سجل` : "—"}
           </span>
@@ -772,8 +987,27 @@ function Resource({
             </button>
           </div>
         ) : resource === "cases" ? (
-          <CaseTable rows={data?.results || []} go={go} />
+          <CaseTable
+            rows={data?.results || []}
+            go={go}
+            density={density}
+            emptyMessage={search || status
+              ? "لا توجد ملفات تطابق البحث والحالة المحددين."
+              : session.role === "registrar"
+                ? "ابدأ مسار المعالجة بتسجيل أول ملف. ستبقى جميع الخطوات ضمن بيئة التقييم."
+                : session.role === "citizen"
+                  ? "لا توجد ملفات مرتبطة بحسابك حاليًا."
+                  : "لا توجد ملفات متاحة ضمن نطاق الجهة. إذا كنت تتوقع ظهور ملفات، راجع مسؤول الجهة أو مسجل المخالفات."}
+            emptyAction={search || status
+              ? <button className="secondary" onClick={() => { setQuery(""); setSearch(""); setStatus(""); setPage(1); }}>مسح عوامل البحث</button>
+              : session.role === "registrar"
+                ? <button className="primary" onClick={() => setCreate(true)}><Icon name="plus" /> تسجيل أول مخالفة</button>
+                : session.role === "citizen"
+                  ? <button className="secondary" onClick={() => go("dashboard")}>العودة لمتابعة ملفاتك</button>
+                  : undefined}
+          />
         ) : data?.results.length ? (
+          <>
           <div className="table-wrap">
             <table>
               <thead>
@@ -794,35 +1028,7 @@ function Resource({
                         key={key}
                         className={key === "digest" ? "digest" : ""}
                       >
-                        {(key === "case_reference" ||
-                          (resource === "appeals" && key === "reference")) &&
-                        row.case ? (
-                          <button
-                            className="reference"
-                            onClick={() => go(`cases/${row.case}`)}
-                          >
-                            {s(row[key])}
-                          </button>
-                        ) : key === "status" ? (
-                          <Status value={row[key]} />
-                        ) : key === "payload" ? (
-                          <NotificationPayload value={row[key]} go={go} />
-                        ) : key === "topic" ? (
-                          notificationTopics[s(row[key])] || s(row[key])
-                        ) : key === "role" ? (
-                          roleNames[row[key] as keyof typeof roleNames] ||
-                          s(row[key])
-                        ) : key.endsWith("_at") ? (
-                          dateValue(row[key])
-                        ) : typeof row[key] === "boolean" ? (
-                          row[key] ? (
-                            "نعم"
-                          ) : (
-                            "لا"
-                          )
-                        ) : (
-                          s(row[key])
-                        )}
+                        <ResourceValue resource={resource} field={key} row={row} session={session} go={go} onReview={setDecision} />
                       </td>
                     ))}
                     {resource === "appeals" && session.role === "appeals" && (
@@ -842,11 +1048,47 @@ function Resource({
               </tbody>
             </table>
           </div>
+          <div className={`resource-cards ${resource === "audit" ? "audit-cards" : ""}`} role="list" aria-label={resourceTitles[resource]}>
+            {resource === "audit" ? data.results.map((row) => <AuditCard key={row.id} row={row} />) : data.results.map((row) => (
+              <article className="resource-card" role="listitem" key={row.id}>
+                <dl>
+                  {listColumns[resource].map(([field, label]) => (
+                    <div key={field}>
+                      <dt>{label}</dt>
+                      <dd className={field === "digest" ? "digest" : undefined}>
+                        <ResourceValue resource={resource} field={field} row={row} session={session} go={go} onReview={setDecision} />
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                {resource === "appeals" && session.role === "appeals" && row.status === "pending" && (
+                  <button className="secondary" onClick={() => setDecision(row)}>مراجعة الاعتراض</button>
+                )}
+              </article>
+            ))}
+          </div>
+          </>
         ) : (
-          <Empty>
-            {canCreate(resource, session)
-              ? "ابدأ بإضافة أول سجل باستخدام الزر أعلى الصفحة."
-              : "ستظهر السجلات هنا عند توفرها من الخادم."}
+          <Empty action={
+            ["appeals", "payments"].includes(resource)
+              ? <button className="secondary" onClick={() => go("cases")}>فتح ملفات المخالفات <Icon name="arrow" /></button>
+              : canCreate(resource, session)
+                ? <button className="primary" onClick={() => setCreate(true)}><Icon name="plus" /> إضافة أول سجل</button>
+                : undefined
+          }>
+            {resource === "appeals"
+              ? session.role === "appeals"
+                ? "لا توجد اعتراضات بانتظار اللجنة. عند ورود طلب جديد، ستظهر بياناته هنا ويمكن فتح ملف المخالفة المرتبط به."
+                : "تظهر الاعتراضات بعد تقديمها من ملف مخالفة مبلّغ. لا يمكن إنشاء اعتراض من هذا السجل مباشرة."
+              : resource === "payments"
+                ? session.role === "finance"
+                  ? "لا توجد تسويات مسجلة. بعد التحقق الخارجي من السداد، افتح ملفًا مبلّغًا لتسجيل التسوية؛ لا تجمع المنصة بيانات البطاقات."
+                  : session.role === "citizen"
+                    ? "لا توجد مبالغ مرتبطة بحسابك. إذا كان لديك ملف مبلّغ، افتحه للاطلاع على خيارات المتابعة المتاحة في بيئة التقييم."
+                    : "لا توجد قيود سداد في سجلات الجهة. أي تسوية جديدة يجب أن تُسجّل من ملف مبلّغ وبعد التحقق الخارجي منها."
+                : canCreate(resource, session)
+                  ? "ابدأ بإضافة أول سجل باستخدام الإجراء أعلاه."
+                  : "ستظهر السجلات هنا عند توفرها ضمن صلاحياتك."}
           </Empty>
         )}
         <div className="pagination">
@@ -1492,16 +1734,32 @@ function CaseDetail({
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  void mutate(
-                    "appeals",
-                    Object.fromEntries(new FormData(e.currentTarget)),
-                    "تم تسجيل الاعتراض للمراجعة.",
-                    e.currentTarget,
-                  );
+                  const form = e.currentTarget;
+                  const data = new FormData(form);
+                  const files = data
+                    .getAll("attachments")
+                    .filter((item): item is File => item instanceof File && item.size > 0);
+                  if (files.length > 5) {
+                    setError("يمكن إرفاق خمسة مستندات كحد أقصى.");
+                    return;
+                  }
+                  if (files.reduce((total, file) => total + file.size, 0) > 25 * 1024 * 1024) {
+                    setError("إجمالي المرفقات لا يتجاوز 25 ميجابايت.");
+                    return;
+                  }
+                  void mutate("appeals", data, "تم تسجيل الاعتراض للمراجعة.", form);
                 }}
               >
                 <Field label="سبب الاعتراض">
                   <textarea name="reason" rows={4} required minLength={5} />
+                </Field>
+                <Field label="المستندات المؤيدة" hint="اختياري: PDF أو JPEG أو PNG، حتى 10 ميجابايت لكل ملف وخمسة ملفات (25 ميجابايت إجمالًا).">
+                  <input
+                    name="attachments"
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf"
+                    multiple
+                  />
                 </Field>
                 <button className="primary" disabled={busy}>
                   إرسال الاعتراض
@@ -1735,6 +1993,20 @@ function App() {
     window.addEventListener("hashchange", handler);
     return () => window.removeEventListener("hashchange", handler);
   }, []);
+  useEffect(() => {
+    if (!menu) return;
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLButtonElement>("#primary-navigation nav button")?.focus();
+    });
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenu(false);
+        document.getElementById("mobile-nav-toggle")?.focus();
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [menu]);
   const go = useCallback((v: string) => {
     window.location.hash = v;
   }, []);
@@ -1761,6 +2033,7 @@ function App() {
     );
   const nav = navigation(session.role),
     resource = path.split("/")[0],
+    viewResource = resource === "review" ? "cases" : resource,
     authorized = nav.some((x) => x.id === resource);
   return (
     <>
@@ -1779,7 +2052,8 @@ function App() {
         انتقل إلى المحتوى
       </a>
       <div className="app-shell">
-        <aside className={`sidebar ${menu ? "is-open" : ""}`}>
+        {menu && <button className="sidebar-scrim" aria-label="إغلاق القائمة" onClick={() => { setMenu(false); document.getElementById("mobile-nav-toggle")?.focus(); }} />}
+        <aside id="primary-navigation" className={`sidebar ${menu ? "is-open" : ""}`}>
           <Brand />
           <div className="workspace-label">
             مساحة الجهة <span>{session.agency_name || "الجهة المسجلة"}</span>
@@ -1789,7 +2063,12 @@ function App() {
               <button
                 key={item.id}
                 className={resource === item.id ? "active" : ""}
-                onClick={() => go(item.id)}
+                aria-label={item.label}
+                title={item.label}
+                onClick={() => {
+                  go(item.id);
+                  setMenu(false);
+                }}
                 aria-current={resource === item.id ? "page" : undefined}
               >
                 <Icon name={item.id} />
@@ -1825,18 +2104,26 @@ function App() {
         <div className="workspace">
           <header className="topbar">
             <button
+              id="mobile-nav-toggle"
               className="mobile-toggle secondary"
               aria-label="فتح أو إغلاق القائمة"
               aria-expanded={menu}
+              aria-controls="primary-navigation"
               onClick={() => setMenu((v) => !v)}
             >
-              ☰ القائمة
+              <Icon name="menu" /> <span>القائمة</span>
             </button>
-            <div className="breadcrumb">
-              رَصد <span>/</span> {resourceTitles[resource] || "نظرة عامة"}
+            <div className="topbar-context">
+              <div className="breadcrumb">
+                <span className="breadcrumb-brand">رَصد</span> <span>/</span> {resourceTitles[resource] || "نظرة عامة"}
+              </div>
+              <div className="topbar-identity">
+                <span className="agency-indicator"><small>الجهة</small><strong>{session.agency_name || "الجهة المسجلة"}</strong></span>
+                {session.simulation && <span className="simulation-indicator"><i /> محاكاة فقط</span>}
+              </div>
             </div>
             <div className="topbar-end">
-              <span className="session-indicator">جلسة مستخدم موثقة</span>
+              <span className="session-indicator">جلسة موثقة</span>
               <button
                 className="icon-button"
                 aria-label="الإشعارات"
@@ -1865,9 +2152,10 @@ function App() {
             ) : (
               <Resource
                 key={resource}
-                resource={resource}
+                resource={viewResource}
                 session={session}
                 go={go}
+                reviewQueue={resource === "review"}
               />
             )}
           </main>
