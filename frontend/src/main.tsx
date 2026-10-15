@@ -16,6 +16,22 @@ import "./style.css";
 
 const s = textValue;
 function Icon({ name = "grid" }: { name?: string }) {
+  const referenceIcons: Record<string, React.ReactNode> = {
+    dashboard: <><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></>,
+    cases: <><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8"/></>,
+    review: <><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2m1 10 2 2 4-4"/></>,
+    appeals: <><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Zm-14 0 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></>,
+    payments: <><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></>,
+    cameras: <><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></>,
+    users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/></>,
+    audit: <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5M12 7v5l4 2"/>,
+    notifications: <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/>,
+    search: <><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></>,
+    eye: <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>,
+    filter: <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z" />,
+    chevron: <path d="m15 18-6-6 6-6"/>,
+    logout: <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"/>,
+  };
   const paths: Record<string, string> = {
     grid: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
     cases: "M8 3h8v3H8z M6 5H4v16h16V5h-2 M8 11h8 M8 16h5",
@@ -51,11 +67,11 @@ function Icon({ name = "grid" }: { name?: string }) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d={paths[name] || paths.grid} />
+      {referenceIcons[name] || <path d={paths[name] || paths.grid} />}
     </svg>
   );
 }
-function Status({ value }: { value: unknown }) {
+function Status({ value, label }: { value: unknown; label?: string }) {
   const status = s(value);
   const icon = ["approved", "issued", "paid", "closed", "online", "accepted"].includes(status)
     ? "check"
@@ -66,8 +82,8 @@ function Status({ value }: { value: unknown }) {
         : "alert";
   return (
     <span className={`status status-${status}`}>
-      <Icon name={icon} />
-      <span>{statusNames[status] || status}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/>{icon === "check" ? <path d="m9 12 2 2 4-4"/> : icon === "clock" ? <path d="M12 6v6l4 2"/> : icon === "close" ? <path d="m9 9 6 6m0-6-6 6"/> : <path d="M12 8v4m0 4h.01"/>}</svg>
+      <span>{label || statusNames[status] || status}</span>
     </span>
   );
 }
@@ -117,7 +133,7 @@ function Field({
   const fieldId = useId();
   return (
     <label className="field">
-      <span id={`${fieldId}-label`}>{label}</span>
+      <span><span id={`${fieldId}-label`}>{label}</span>{React.isValidElement(children) && (children.props as {required?: boolean}).required && <span className="required-mark" aria-hidden="true">*</span>}</span>
       {React.isValidElement(children) ? React.cloneElement(children as React.ReactElement<{id:string;'aria-labelledby':string;'aria-describedby'?:string}>, {id:fieldId,'aria-labelledby':`${fieldId}-label`,'aria-describedby':hint ? `${fieldId}-hint` : undefined}) : children}
       {hint && <small id={`${fieldId}-hint`}>{hint}</small>}
     </label>
@@ -126,11 +142,11 @@ function Field({
 function Brand({ inverse = false }: { inverse?: boolean }) {
   return (
     <div className="brand">
-      <svg className={`brand-mark ${inverse ? "brand-mark-inverse" : ""}`} viewBox="0 0 40 40" role="img" aria-label="شعار رَصد">
-        <rect x="1" y="1" width="38" height="38" rx={inverse ? "7" : "10"} fill={inverse ? "#fff" : "currentColor"} />
-        <circle cx="20" cy="20" r="9" fill="none" stroke={inverse ? "#14513F" : "#fff"} strokeWidth={inverse ? "3.3" : "2.2"} strokeDasharray={inverse ? "49 14" : "48 9"} strokeDashoffset="4" transform={inverse ? "rotate(-6 20 20)" : undefined} />
-        <circle cx={inverse ? "26.5" : "27.5"} cy={inverse ? "13.5" : "12.7"} r={inverse ? "2.9" : "2.5"} fill="#C9A24B" />
-        <circle cx="20" cy="20" r="2.1" fill={inverse ? "#14513F" : "#fff"} />
+      <svg className={`brand-mark ${inverse ? "brand-mark-inverse" : ""}`} viewBox="0 0 96 96" role="img" aria-label="شعار رَصد">
+        <rect width="96" height="96" rx="18" fill="#FFFFFF" />
+        <circle cx="48" cy="48" r="22" fill="none" stroke="#14513F" strokeWidth="8" strokeDasharray="108 30" transform="rotate(-6 48 48)" />
+        <circle cx="63.6" cy="32.4" r="7" fill="#C9A24B" />
+        <circle cx="48" cy="48" r="5" fill="#14513F" />
       </svg>
       <div>
         <strong>رَصد</strong>
@@ -141,7 +157,9 @@ function Brand({ inverse = false }: { inverse?: boolean }) {
 }
 function Login({ onLogin }: { onLogin: (v: Session) => void }) {
   const [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [showPassword, setShowPassword] = useState(false);
+  const passwordId = useId();
   async function submit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
@@ -169,7 +187,7 @@ function Login({ onLogin }: { onLogin: (v: Session) => void }) {
           <h1>قضية موثَّقة من التسجيل حتى الإغلاق</h1>
           <p>نظام إدارة المخالفات المرورية</p>
         </div>
-        <small>منصة تقييم مستقلة • لا تمثل جهة حكومية</small>
+        <aside className="login-disclosure" aria-label="تنبيه بيئة التقييم">الدفع والأجهزة والإشعارات في هذه النسخة محاكاة. منصة تقييم مستقلة.</aside>
       </section>
       <section className="login-panel">
         <div className="login-form">
@@ -188,14 +206,22 @@ function Login({ onLogin }: { onLogin: (v: Session) => void }) {
                 maxLength={150}
               />
             </Field>
-            <Field label="كلمة المرور">
+            <div className="field">
+              <label htmlFor={passwordId}>كلمة المرور <span className="required-mark" aria-hidden="true">*</span></label>
+              <span className="password-entry">
               <input
+                id={passwordId}
                 name="password"
-                type="password"
+                aria-label="كلمة المرور"
+                type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 required
               />
-            </Field>
+                <button type="button" className="password-toggle" aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} aria-pressed={showPassword} onClick={() => setShowPassword(v => !v)}><Icon name="eye" /></button>
+              </span>
+            </div>
+            <details className="otp-disclosure">
+              <summary>لدي رمز تحقق إضافي</summary>
             <Field
               label="رمز التحقق الإضافي"
               hint="أدخله إذا كانت المصادقة الثنائية مفعلة لحسابك."
@@ -209,16 +235,11 @@ function Login({ onLogin }: { onLogin: (v: Session) => void }) {
                 dir="ltr"
               />
             </Field>
+            </details>
             <button className="primary wide" disabled={busy}>
               {busy ? "جارٍ التحقق…" : "متابعة"}
-              <Icon name="arrow" />
             </button>
           </form>
-          <p className="login-foot">
-            صلاحياتك تحدد السجلات والإجراءات المتاحة لك.
-            <br />
-            تُسجل الإجراءات الحساسة لأغراض التدقيق.
-          </p>
         </div>
       </section>
     </main>
@@ -281,22 +302,19 @@ function Dashboard({
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">مساحة العمل / {roleNames[session.role]}</p>
           <h1>
             {session.role === "citizen"
               ? "متابعة ملفاتك المرورية"
-              : "نظرة عامة على العمل"}
+              : "لوحة المعلومات"}
           </h1>
           <p>
-            مرحبًا {session.username}،{" "}
             {session.role === "citizen"
               ? "تابع حالة المخالفات والاعتراضات المرتبطة بحسابك."
-              : "هذه أحدث الأرقام المسجلة لدى جهتك."}
+              : "ملخص نشاط المخالفات"}
           </p>
         </div>
         <div className="dashboard-date-range" aria-label="النطاق الزمني للبيانات">
-          <Icon name="calendar" />
-          <span><small>النطاق الزمني</small><strong>جميع السجلات المتاحة</strong></span>
+          <span>جميع السجلات المتاحة</span>
         </div>
       </div>
       <Message error={error} />
@@ -327,25 +345,23 @@ function Dashboard({
                   {data.cameras_online.toLocaleString("ar")}
                   <em> / {data.cameras_total.toLocaleString("ar")}</em>
                 </strong>
-                <small>بيانات اصطناعية في بيئة التقييم</small>
+                <small>أجهزة تجريبية متصلة</small>
               </article>
               <article>
                 <span>إشعارات بانتظار المعالجة</span>
                 <strong>{data.pending_outbox.toLocaleString("ar")}</strong>
-                <small>قائمة تجريبية؛ بلا إرسال خارجي</small>
+                <small>محاكاة؛ بلا إرسال خارجي</small>
               </article>
             </section>
             <section className="dashboard-analytics" aria-label="تحليلات الملفات وأجهزة الرصد">
               <section className="panel ranked-panel">
                 <div className="panel-heading">
-                  <div><p className="eyebrow">توزيع الملفات</p><h2>حسب الحالة</h2><p>ترتيب تنازلي من السجلات المتاحة للجهة.</p></div>
-                  <span className="chart-total"><strong>{data.total.toLocaleString("ar")}</strong><small>ملف</small></span>
+                  <div><h2>توزيع ملفات المخالفات حسب الحالة</h2></div>
                 </div>
                 {statusRows.length ? (
                   <ol className="ranked-list" aria-label="عدد الملفات حسب الحالة">
-                    {statusRows.map((row, index) => (
+                    {statusRows.map((row) => (
                       <li className="ranked-row" key={row.status}>
-                        <span className="rank-index">{(index + 1).toLocaleString("ar")}</span>
                         <span className="rank-label">{statusNames[row.status] || row.status}</span>
                         <span className="rank-track" aria-hidden="true"><i style={{ width: `${Math.round((row.total / topStatusCount) * 100)}%` }} /></span>
                         <strong className="rank-value">{row.total.toLocaleString("ar")}</strong>
@@ -354,7 +370,6 @@ function Dashboard({
                   </ol>
                 ) : (
                   <div className="ranked-empty">
-                    <span className="empty-zero" aria-hidden="true" dir="ltr">0</span>
                     <div><strong>لا توجد ملفات في السجل بعد</strong><p>سيظهر توزيع الحالات هنا عند توفر سجلات فعلية في هذه البيئة.</p></div>
                     <button className={session.role === "registrar" ? "primary" : "secondary"} onClick={() => go("cases")}>{session.role === "registrar" ? "تسجيل مخالفة" : "عرض ملفات المخالفات"} <Icon name="arrow" /></button>
                   </div>
@@ -362,14 +377,12 @@ function Dashboard({
               </section>
               <section className="panel ranked-panel device-panel">
                 <div className="panel-heading">
-                  <div><p className="eyebrow">حالة المحاكي</p><h2>أجهزة الرصد</h2><p>قيم تجريبية مسجلة؛ لا تمثل اتصالًا ميدانيًا.</p></div>
-                  <span className="device-total"><Icon name="cameras" /><strong>{data.cameras_total.toLocaleString("ar")}</strong><small>جهاز</small></span>
+                  <div><h2>حالة أجهزة الرصد</h2></div>
                 </div>
                 {data.cameras_total > 0 ? (
                   <ol className="ranked-list device-rankings" aria-label="حالة أجهزة الرصد التجريبية">
-                    {[{ label: "متصلة", amount: data.cameras_online, status: "online" }, { label: "غير متصلة", amount: offlineCameras, status: "offline" }].map((entry, index) => (
+                    {[{ label: "متصلة", amount: data.cameras_online, status: "online" }, { label: "غير متصلة", amount: offlineCameras, status: "offline" }].map((entry) => (
                       <li className={`ranked-row ${entry.status}`} key={entry.status}>
-                        <span className="rank-index">{(index + 1).toLocaleString("ar")}</span>
                         <span className="rank-label">{entry.label}</span>
                         <span className="rank-track" aria-hidden="true"><i style={{ width: `${Math.round((entry.amount / data.cameras_total) * 100)}%` }} /></span>
                         <strong className="rank-value">{entry.amount.toLocaleString("ar")}</strong>
@@ -378,7 +391,6 @@ function Dashboard({
                   </ol>
                 ) : (
                   <div className="ranked-empty device-empty">
-                    <span className="empty-zero" aria-hidden="true" dir="ltr">0</span>
                     <div><strong>لا توجد أجهزة في السجل</strong><p>٠ من ٠ — لا توجد بيانات اتصال ميداني.</p></div>
                   </div>
                 )}
@@ -810,6 +822,7 @@ function ResourceValue({
         {attachments.map((file) => (
           <li key={file.id}>
             <a href={`${ROOT}evidence/${file.id}/download/`}>
+              <Icon name="cases" />
               {s(file.original_name)}
             </a>
           </li>
@@ -825,6 +838,7 @@ function ResourceValue({
   if (field === "role")
     return <>{roleNames[row[field] as keyof typeof roleNames] || s(row[field])}</>;
   if (field.endsWith("_at")) return <>{dateValue(row[field])}</>;
+  if (resource === "users" && field === "is_active") return <Status value={row[field] ? "online" : "offline"} label={row[field] ? "نشط" : "غير نشط"} />;
   if (typeof row[field] === "boolean") return <>{row[field] ? "نعم" : "لا"}</>;
   if (resource === "appeals" && field === "status" && row.status === "pending" && session.role === "appeals")
     return <button className="secondary" onClick={() => onReview(row)}>مراجعة الاعتراض</button>;
@@ -851,7 +865,8 @@ function Resource({
     [density, setDensity] = useState<"comfortable" | "compact">("comfortable"),
     [create, setCreate] = useState(false),
     [revision, setRevision] = useState(0),
-    [decision, setDecision] = useState<Row | null>(null);
+    [decision, setDecision] = useState<Row | null>(null),
+    [selectedAppealId, setSelectedAppealId] = useState<string | number | null>(null);
   useEffect(() => {
     let live = true;
     setBusy(true);
@@ -872,11 +887,16 @@ function Resource({
       live = false;
     };
   }, [resource, page, search, status, revision]);
+  const selectedAppeal = resource === "appeals"
+    ? data?.results.find(row => row.id === selectedAppealId) || data?.results[0]
+    : undefined;
+  const tableColumns: [string, string][] = resource === "appeals"
+    ? [["reference", "رقم القضية"], ["created_at", "تاريخ التقديم"], ["status", "الحالة"]]
+    : listColumns[resource];
   return (
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">مساحة العمل / السجلات</p>
           <h1>{reviewQueue ? resourceTitles.review : resourceTitles[resource]}</h1>
           <p>{reviewQueue ? resourceDescriptions.review : resourceDescriptions[resource]}</p>
         </div>
@@ -890,7 +910,7 @@ function Resource({
           {canCreate(resource, session) && (
             <button className="primary" onClick={() => setCreate(true)}>
               <Icon name="plus" />
-              {resource === "cases" ? "تسجيل مخالفة" : "إضافة سجل"}
+              {resource === "cases" ? "تسجيل مخالفة" : resource === "users" ? "إضافة مستخدم" : "إضافة سجل"}
             </button>
           )}
         </div>
@@ -912,6 +932,7 @@ function Resource({
         </div>
       )}
       {reviewQueue && session.role === "approver" && <div className="review-queue-note"><Icon name="review" /><span><strong>قائمة الاعتماد</strong><small>الملفات المحالة بعد مراجعة الأدلة.</small></span></div>}
+      <div className={resource === "appeals" ? "appeals-layout" : undefined}>
       <section className="panel">
         <div className="toolbar">
           {resource === "cases" && (
@@ -923,7 +944,7 @@ function Resource({
                 setPage(1);
               }}
             >
-              <input
+              <span className="search-input"><Icon name="search" /><input
                 aria-label="البحث في السجلات"
                 placeholder={
                   resource === "cases"
@@ -932,7 +953,7 @@ function Resource({
                 }
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-              />
+              /></span>
               <button className="secondary" type="submit">
                 بحث
               </button>
@@ -1012,28 +1033,31 @@ function Resource({
             <table>
               <thead>
                 <tr>
-                  {listColumns[resource].map(([key, label]) => (
+                  {tableColumns.map(([key, label]) => (
                     <th key={key}>{label}</th>
                   ))}
-                  {resource === "appeals" && session.role === "appeals" && (
+                  {resource === "appeals" && (
                     <th>الإجراء</th>
                   )}
                 </tr>
               </thead>
               <tbody>
                 {data.results.map((row) => (
-                  <tr key={row.id}>
-                    {listColumns[resource].map(([key]) => (
+                  <tr key={row.id} className={resource === "appeals" && selectedAppeal?.id === row.id ? "is-selected" : undefined}>
+                    {tableColumns.map(([key]) => (
                       <td
                         key={key}
                         className={key === "digest" ? "digest" : ""}
                       >
                         <ResourceValue resource={resource} field={key} row={row} session={session} go={go} onReview={setDecision} />
+                        {resource === "appeals" && key === "reference" && Array.isArray(row.attachments) && row.attachments.length > 0 && <div className="appeal-row-attachments"><ResourceValue resource={resource} field="attachments" row={row} session={session} go={go} onReview={setDecision}/></div>}
                       </td>
                     ))}
-                    {resource === "appeals" && session.role === "appeals" && (
+                    {resource === "appeals" && (
                       <td>
-                        {row.status === "pending" && (
+                        <div className="appeal-row-actions">
+                        <button className="text-button" onClick={() => setSelectedAppealId(row.id)} aria-label={`تفاصيل الاعتراض ${s(row.reference)}`} aria-pressed={selectedAppeal?.id === row.id}>التفاصيل <Icon name="chevron"/></button>
+                        {row.status === "pending" && session.role === "appeals" && (
                           <button
                             className="secondary"
                             onClick={() => setDecision(row)}
@@ -1041,6 +1065,7 @@ function Resource({
                             مراجعة الاعتراض
                           </button>
                         )}
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -1111,6 +1136,16 @@ function Resource({
           </div>
         </div>
       </section>
+      {selectedAppeal && !busy && !error && (
+        <aside className="panel appeal-detail-panel" aria-label="تفاصيل الاعتراض المحدد">
+          <header><button className="reference" onClick={() => go(`cases/${selectedAppeal.case}`)}>{s(selectedAppeal.reference)}</button><Status value={selectedAppeal.status}/></header>
+          <div><h3>سبب الاعتراض</h3><p className="appeal-reason">{s(selectedAppeal.reason)}</p></div>
+          <div className="appeal-document-box"><Icon name="cases"/><div><h3>المستندات المؤيدة</h3><ResourceValue resource="appeals" field="attachments" row={selectedAppeal} session={session} go={go} onReview={setDecision}/></div></div>
+          <dl className="appeal-facts"><div><dt>تاريخ التقديم</dt><dd>{dateValue(selectedAppeal.created_at)}</dd></div>{selectedAppeal.decision_reason ? <div><dt>أسباب القرار</dt><dd>{s(selectedAppeal.decision_reason)}</dd></div> : null}</dl>
+          {selectedAppeal.status === "pending" && session.role === "appeals" && <><p className="subtle">يُسجّل القرار المسبّب في سجل التدقيق.</p><button className="primary wide" onClick={() => setDecision(selectedAppeal)}>مراجعة الاعتراض</button></>}
+        </aside>
+      )}
+      </div>
       {create && (
         <CreateDialog
           resource={resource}
@@ -2013,14 +2048,12 @@ function App() {
   if (loading)
     return (
       <>
-        <aside className="evaluation" aria-label="تنبيه بيئة التقييم">بيئة تقييم — غير معتمدة للإنفاذ الفعلي</aside>
         <Loading />
       </>
     );
   if (!session)
     return (
       <>
-        <aside className="evaluation" aria-label="تنبيه بيئة التقييم">بيئة تقييم — غير معتمدة للإنفاذ الفعلي</aside>
         {bootError && <Message error={bootError} />}
         <Login
           onLogin={(v) => {
@@ -2035,12 +2068,13 @@ function App() {
     resource = path.split("/")[0],
     viewResource = resource === "review" ? "cases" : resource,
     authorized = nav.some((x) => x.id === resource);
+  const managementResources = ["cameras", "rules", "users", "audit"];
+  const navGroups = [
+    { title: "العمليات", items: nav.filter(item => !managementResources.includes(item.id)) },
+    { title: "الإدارة", items: nav.filter(item => managementResources.includes(item.id)) },
+  ];
   return (
     <>
-      <aside className="evaluation" aria-label="تنبيه بيئة التقييم">
-        بيئة تقييم — غير معتمدة للإنفاذ الفعلي{" "}
-        <span>لا تستخدم بيانات شخصية حقيقية</span>
-      </aside>
       <a
         href="#main-content"
         className="skip-link"
@@ -2055,11 +2089,11 @@ function App() {
         {menu && <button className="sidebar-scrim" aria-label="إغلاق القائمة" onClick={() => { setMenu(false); document.getElementById("mobile-nav-toggle")?.focus(); }} />}
         <aside id="primary-navigation" className={`sidebar ${menu ? "is-open" : ""}`}>
           <Brand />
-          <div className="workspace-label">
-            مساحة الجهة <span>{session.agency_name || "الجهة المسجلة"}</span>
-          </div>
           <nav aria-label="التنقل الرئيسي">
-            {nav.map((item) => (
+            {navGroups.map(group => group.items.length > 0 && (
+              <React.Fragment key={group.title}>
+                <div className="nav-group-label">{group.title}</div>
+                {group.items.map((item) => (
               <button
                 key={item.id}
                 className={resource === item.id ? "active" : ""}
@@ -2075,6 +2109,8 @@ function App() {
                 {item.label}
                 {resource === item.id && <i />}
               </button>
+                ))}
+              </React.Fragment>
             ))}
           </nav>
           <div className="sidebar-bottom">
@@ -2115,15 +2151,10 @@ function App() {
             </button>
             <div className="topbar-context">
               <div className="breadcrumb">
-                <span className="breadcrumb-brand">رَصد</span> <span>/</span> {resourceTitles[resource] || "نظرة عامة"}
-              </div>
-              <div className="topbar-identity">
-                <span className="agency-indicator"><small>الجهة</small><strong>{session.agency_name || "الجهة المسجلة"}</strong></span>
-                {session.simulation && <span className="simulation-indicator"><i /> محاكاة فقط</span>}
+                <span>الرئيسية</span> <Icon name="chevron" /> <strong>{resource === "dashboard" ? "لوحة المعلومات" : resourceTitles[resource] || "لوحة المعلومات"}</strong>
               </div>
             </div>
             <div className="topbar-end">
-              <span className="session-indicator">جلسة موثقة</span>
               <button
                 className="icon-button"
                 aria-label="الإشعارات"
@@ -2161,7 +2192,7 @@ function App() {
           </main>
           <footer className="workspace-footer">
             <span>رَصد · منصة إدارة المخالفات والسلامة المرورية</span>
-            <span>بيئة تقييم مستقلة</span>
+            <span>{session.agency_name} · بيئة تقييم مستقلة — غير معتمدة للإنفاذ الفعلي{session.simulation ? " · الدفع والأجهزة والإشعارات محاكاة" : ""}</span>
           </footer>
         </div>
       </div>
